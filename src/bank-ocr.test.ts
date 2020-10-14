@@ -3,6 +3,7 @@ import {
   parseAccountNumbers,
   parseLCDLine,
   parseNumber,
+  validate,
 } from './bank-ocr';
 
 describe('Bank OCR', () => {
@@ -89,6 +90,16 @@ describe('Bank OCR', () => {
       ['9', ' _ |_| _|'],
     ])('Checking %s', (resultNumber, lcdNumber) => {
       expect(parseNumber(lcdNumber)).toBe(resultNumber);
+    });
+  });
+
+  describe('validate', () => {
+    it('should validate valid account number', () => {
+      expect(validate('345882865')).toEqual(true);
+    });
+
+    it('should not validate valid account number', () => {
+      expect(validate('345882866')).toEqual(false);
     });
   });
 });
