@@ -1,105 +1,17 @@
-import {
-  parseAccountFile,
-  parseAccountNumbers,
-  parseLCDLine,
-  parseNumber,
-  validate,
-} from './bank-ocr';
+import { printAccounts } from './bank-ocr';
 
 describe('Bank OCR', () => {
-  describe('parseAccountFile', () => {
-    it('reads a one-line file', async () => {
-      expect(await parseAccountFile(`${__dirname}/0123456789.txt`)).toEqual(
+  describe('printAccounts', () => {
+    it('validates a one-line file', async () => {
+      expect(await printAccounts(`${__dirname}/0123456789.txt`)).toEqual(
         '0123456789',
       );
     });
 
-    it('reads a two-line file', async () => {
-      expect(await parseAccountFile(`${__dirname}/01234-56789.txt`)).toEqual(
-        '01234' + '\n' + '56789',
-      );
-    });
-  });
-
-  describe('parseAccountNumbers', () => {
-    it('should read one number', () => {
+    it('validates a 3-line file', async () => {
       expect(
-        parseAccountNumbers(
-          ` _  
-| | 
-|_| `.split('\n'),
-        ),
-      ).toEqual('0');
-
-      expect(
-        parseAccountNumbers(
-          `    
-  | 
-  | `.split('\n'),
-        ),
-      ).toEqual('1');
-    });
-
-    it('should read two numbers', () => {
-      expect(
-        parseAccountNumbers(
-          ` _      
-| |   | 
-|_|   | `.split('\n'),
-        ),
-      ).toEqual('01');
-    });
-  });
-
-  describe('parseLCDLine', () => {
-    it('should parse one number', () => {
-      expect(
-        parseLCDLine(
-          ` _  
-| | 
-|_| `.split('\n'),
-        ),
-      ).toEqual([' _ | ||_|']);
-    });
-
-    it('should parse two numbers for one line', () => {
-      expect(
-        parseLCDLine(
-          ` _      
-| |   | 
-|_|   | `.split('\n'),
-        ),
-      ).toEqual([
-        ' _ | ||_|',
-        '     |  |',
-      ]);
-    });
-  });
-
-  describe('parseNumber', () => {
-    it.each([
-      ['0', ' _ | ||_|'],
-      ['1', '     |  |'],
-      ['2', ' _  _||_ '],
-      ['3', ' _  _| _|'],
-      ['4', '   |_|  |'],
-      ['5', ' _ |_  _|'],
-      ['6', ' _ |_ |_|'],
-      ['7', ' _   |  |'],
-      ['8', ' _ |_||_|'],
-      ['9', ' _ |_| _|'],
-    ])('Checking %s', (resultNumber, lcdNumber) => {
-      expect(parseNumber(lcdNumber)).toBe(resultNumber);
-    });
-  });
-
-  describe('validate', () => {
-    it('should validate valid account number', () => {
-      expect(validate('345882865')).toEqual(true);
-    });
-
-    it('should not validate valid account number', () => {
-      expect(validate('345882866')).toEqual(false);
+        await printAccounts(`${__dirname}/acceptance-corrupted.txt`),
+      ).toEqual('000000051\n000000050 ERR\n0000??050 ILL');
     });
   });
 });

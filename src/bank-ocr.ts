@@ -1,54 +1,25 @@
-import { promises as fs } from 'fs';
+import { parseAccountFile } from './bank-parser';
+import { validate } from './account-validator';
 
-export async function parseAccountFile(fileName: string) {
-  const data = (await fs.readFile(fileName)).toString();
+export async function printAccounts(fileName: string) {
+  const result = await validateAccountFile(fileName);
 
-  return (data.match(/(([^\n]*\n){3})/gm) ?? [])
-    .map(l => l.split('\n'))
-    .map(parseAccountNumbers)
+  return result
+    .map(value => `${value.number} ${value.result}`.trim())
     .join('\n');
 }
 
-export function parseAccountNumbers(lines: string[]) {
-  return parseLCDLine(lines).map(parseNumber).join('');
-}
+async function validateAccountFile(fileName: string) {
+  const parsedAccounts = await parseAccountFile(fileName);
 
-export function parseLCDLine([line1, line2, line3]: string[]) {
-  const lcdNumbers = [];
-  for (let i = 0; i < line1.length; i += 4) {
-    lcdNumbers.push(line1.substr(i, 3) +
-      line2.substr(i, 3) +
-      line3.substr(i, 3));
-  }
+  return parsedAccounts.map(parsedAccount => {
+    if (parsedAccount.includes('?')) {
+      return { number: parsedAccount, result: 'ILL' };
+    }
 
-  return lcdNumbers;
-}
-
-const lcdNumbers = [
-  ' _ | ||_|',
-  '     |  |',
-  ' _  _||_ ',
-  ' _  _| _|',
-  '   |_|  |',
-  ' _ |_  _|',
-  ' _ |_ |_|',
-  ' _   |  |',
-  ' _ |_||_|',
-  ' _ |_| _|',
-];
-
-export function parseNumber(inputLcdNumber: string) {
-  return lcdNumbers
-    .findIndex(lcdNumber => lcdNumber === inputLcdNumber)
-    .toString();
-}
-
-export function validate(accountNumber: string) {
-  const checksum = accountNumber
-    .split('')
-    .reverse()
-    .map(digit => parseInt(digit, 10))
-    .reduce((acc, currentValue, index) => acc + currentValue * (index + 1), 0);
-
-  return checksum % 11 === 0;
+    return {
+      number: parsedAccount,
+      result: validate(parsedAccount) ? '' : 'ERR',
+    };
+  });
 }
